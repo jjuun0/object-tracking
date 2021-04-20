@@ -131,6 +131,7 @@ if __name__ == '__main__':
     image = cv2.imread('NonVideo3_tiny/000/images/005.png')
 
     # Define a bounding box
+    # goturn 사용시 자동으로 객체 검출하기 위해 초기화 시켜줌.
     # bbox = (276, 23, 86, 320)
 
     # Uncomment the line below to select a different bounding box
