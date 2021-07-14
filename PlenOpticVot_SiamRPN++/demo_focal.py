@@ -99,9 +99,7 @@ def main():
     current_distance = [-1 for _ in range(tracker_num)]
     necessary_tracking = [True for _ in range(tracker_num)]
     outputs = [-1 for _ in range(tracker_num)]
-    max_index = [-1 for _ in range(tracker_num)]
-    max_val = [0 for _ in range(tracker_num)]
-    max_index_center = [(-1, -1) for _ in range(tracker_num)]
+
 
 
     cv2.namedWindow(video_name, cv2.WINDOW_NORMAL)
@@ -121,7 +119,9 @@ def main():
             # tracker.init(frame, init_rect)
             is_first_frame = False
         else:
-
+            max_index = [-1 for _ in range(tracker_num)]
+            max_val = [-1 for _ in range(tracker_num)]
+            max_index_center = [(-1, -1) for _ in range(tracker_num)]
 
             if first_time:
                 print("------ first time ------")
@@ -129,15 +129,17 @@ def main():
                     start = time.time()
 
                     outputs[k] = [tracker[k].track(cv2.imread(f)) for f in focals]
+
                     for i in range(len(outputs[k])):
                         if outputs[k][i]['best_score'] >= max_val[k]:
                             max_val[k] = outputs[k][i]['best_score']
                             max_index[k] = i
 
-                            first_frame_center[k] = (outputs[k][i]['cx'], outputs[k][i]['cy'])
                     end = time.time()
                     print(f"[{k+1}] first tracking time : {end - start:.2f} sec")
                     bbox[k] = list(map(int, outputs[k][max_index[k]]['bbox']))
+                    first_frame_center[k] = (outputs[k][max_index[k]]['cx'], outputs[k][max_index[k]]['cy'])
+
                     current_target[k] = max_index[k]
 
                 first_time = False
@@ -150,11 +152,14 @@ def main():
                         outputs[k] = [tracker[k].track(cv2.imread(focals[i])) for i in range(
                             current_target[k] - 3, current_target[k] + 3)]
 
+
                         for i in range(len(outputs[k])):
                             if outputs[k][i]['best_score'] >= max_val[k]:
                                 max_val[k] = outputs[k][i]['best_score']
                                 max_index[k] = i
-                                max_index_center[k] = (outputs[k][i]['cx'], outputs[k][i]['cy'])
+
+                        max_index_center[k] = (outputs[k][max_index[k]]['cx'], outputs[k][max_index[k]]['cy'])
+
 
                         if prior_frame_center[k] == (-1, -1):
                             prior_frame_center[k] = max_index_center[k]
@@ -176,10 +181,12 @@ def main():
 
                         bbox[k] = list(map(int, outputs[k][max_index[k]]['bbox']))
 
-                        if max_index[k] > 3:
-                            current_target[k] = current_target[k] + abs(3 - max_index[k])
-                        elif max_index[k] < 3:
-                            current_target[k] = current_target[k] - abs(3 - max_index[k])
+                        current_target[k] = max_index[k]
+
+                        # if max_index[k] > 3:
+                        #     current_target[k] = current_target[k] + abs(3 - max_index[k])
+                        # elif max_index[k] < 3:
+                        #     current_target[k] = current_target[k] - abs(3 - max_index[k])
                     else:
                         necessary_tracking[k] = True
                         print(f'******* [{k+1}] traker pass frame *******')
