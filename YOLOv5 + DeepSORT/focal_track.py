@@ -17,24 +17,23 @@ import time
 from pathlib import Path
 import cv2
 import torch
-import torch.backends.cudnn as cudnn
+ import torch.backends.cudnn as cudnn
 import copy
 
 from ImagesDataloader import LoadImagesFolder
 from FocalDataloader import LoadFocalFolder
 
 
-
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 
+
 def save_image(save_dir, frame_num, focal_num, frame):
-    ''' output 이미지 저장 '''
+    """ output 이미지 저장 """
     save_dir.mkdir(parents=True, exist_ok=True)
     save_frame = save_dir / frame_num
     save_frame.mkdir(parents=True, exist_ok=True)
     save_path = save_frame / focal_num
     cv2.imwrite(str(save_path), frame)
-
 
 
 def xyxy_to_xywh(*xyxy):
@@ -137,16 +136,11 @@ def detect(opt):
     if show_vid:
         show_vid = check_imshow()
 
-    # if webcam:
-    #     cudnn.benchmark = True  # set True to speed up constant image size inference
-    #     dataset = LoadStreams(source, img_size=imgsz, stride=stride)
-    # else:
-    #     dataset = LoadImages(source, img_size=imgsz)
-
-    if img_type == 'images':
+    if img_type == 'images':  # 2D Tracking
         dataset = LoadImagesFolder(source, type=img_type, img_size=imgsz)
-    elif img_type == 'focal':
-        dataset = LoadFocalFolder(source, type=img_type, img_size=imgsz, focal_range=(15, 50))
+
+    elif img_type == 'focal':  # Tracking on Focal images
+        dataset = LoadFocalFolder(source, type=img_type, img_size=imgsz, frame_range=(20, 90), focal_range=(15, 50))
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -344,8 +338,6 @@ def detect(opt):
                         if save_img:
                             save_folder = Path('D:/dataset/NonVideo3_tiny_result/unnested')
                             focal_num = dataset.focal_images_path[list_frame_idx][img_idx].split('\\')[-1]
-                            # save_path = os.path.join(save_folder, frame_num, focal_num)
-                            # cv2.imwrite(save_path, imS)
 
                             save_image(save_folder, frame_num, focal_num, imS)
 
@@ -388,4 +380,3 @@ if __name__ == '__main__':
         detect(args)
 
 
-# python select_bboxs_track.py --source son_goal.mp4 --show-vid --img-size 360
