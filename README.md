@@ -87,3 +87,9 @@
   - SelectROI 에서 선택한것을 먼저 DeepSORT 에 넘겨줘 id 를 부여한다  
   - 다음 프레임에서는 이 SelectROI 에서 rpn 기능을 추가한? anchor 를 만들어내주는 모델을 찾고, 이러한 정보를 DeepSORT 에 넘겨준다.  
   - 이때의 confidence 값은 저 anchor 가 만들어준 BBox 가 물체가 있는지 없는지 판단해주는 classfication 을 적용시킨다.
+
+# 2021.07.23
+- YOLOv5 + DeepSORT 모델을 포컬 플레인에서 돌린 결과를 프레임별 평균 트래킹 속도를 그래프로 표현
+- 트래킹한 결과 동영상으로 바꿈
+- https://github.com/jjuun0/object-tracking/blob/master/YOLOv5%20%2B%20DeepSORT/result/YOLOv5%2BDeepSORT%20in%20Focal%20Planes%20Graph.png
+
