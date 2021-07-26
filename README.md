@@ -93,3 +93,14 @@
 - 트래킹한 결과 동영상으로 바꿈
 - https://github.com/jjuun0/object-tracking/blob/master/YOLOv5%20%2B%20DeepSORT/result/YOLOv5%2BDeepSORT%20in%20Focal%20Planes%20Graph.png
 
+# 2021.07.26  
+- SiamRPN++  
+  - sot 문제점 해결 : 2021.07.18 에서의 문제점을 해결함.  
+    - 기존에는 모델을 하나 만들고 트래커를 여러개 만드는 방식에서 트래커가 업데이트 하는데 모델 파라미터에 영향을 끼치는것을 발견.   
+    - 따라서 모델을 여러개 만들고 모델의 트래커는 하나만 만드는 방식으로 변경.  
+
+  - 문제점: 물체가 가려지는 object tracking occlusion 현상이 발생  
+    - 해결: 기존에는 물체의 속도가 느려지면 한 프레임을 건너뛰고 다음 프레임을 트래킹 했는데, 이를 수정.  
+    - 연속으로 두번 건너뛰었다면 전체 포컬 플레인 영역 이미지를 다시 재 트래킹해서 max index 값을 찾는다.  
+ 
+
