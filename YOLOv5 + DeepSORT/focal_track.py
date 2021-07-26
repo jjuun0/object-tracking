@@ -30,9 +30,17 @@ palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 def save_image(save_dir, frame_num, focal_num, frame):
     """ output 이미지 저장 """
     save_dir.mkdir(parents=True, exist_ok=True)
-    save_frame = save_dir / frame_num
-    save_frame.mkdir(parents=True, exist_ok=True)
-    save_path = save_frame / focal_num
+
+
+    if focal_num:
+        save_frame = save_dir / frame_num
+        save_frame.mkdir(parents=True, exist_ok=True)
+        save_path = save_frame / focal_num
+    else:
+        frame_num = frame_num +'.png'
+        save_frame = save_dir / frame_num
+        save_path = save_frame
+
     cv2.imwrite(str(save_path), frame)
 
 
@@ -140,7 +148,7 @@ def detect(opt):
         dataset = LoadImagesFolder(source, type=img_type, img_size=imgsz)
 
     elif img_type == 'focal':  # Tracking on Focal images
-        dataset = LoadFocalFolder(source, type=img_type, img_size=imgsz, frame_range=(20, 90), focal_range=(15, 50))
+        dataset = LoadFocalFolder(source, type=img_type, img_size=imgsz, frame_range=(1, 90), focal_range=(20, 50))
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -238,8 +246,16 @@ def detect(opt):
                 if show_vid:
                     imS = cv2.resize(im0, (960, 540))
                     cv2.imshow(img_type, imS)
+
+                    if save_img:
+                        save_folder = Path('D:/dataset/NonVideo3_tiny_result/2d_big')
+                        frame_num = f'{frame_idx:03d}.png'
+                        save_image(save_folder, frame_num, None, imS)
+
                     if cv2.waitKey(1) == ord('q'):  # q to quit
                         raise StopIteration
+
+
 
                 # Save results (image with detections)
                 # if save_vid:
@@ -265,11 +281,24 @@ def detect(opt):
         #         os.system('open ' + save_path)
 
     elif img_type == 'focal':
+        current_index = 0
         for list_frame_idx, (frame_num, path, imgs, im0s) in enumerate(dataset):  # imgs: resized focal images / im0s: 2d image
+            max_img = im0s
+            max_output = 0
+            max_index = 0
+
             for i in range(5):
                 print()
-            print(f'******* [{frame_num}] frame start *******')
+            print(f'[{int(frame_num)}] frame')
+            frame_start = time.time()
+
+            if current_index > 2:
+                imgs = imgs[current_index-3: current_index+4]
+            elif current_index > 0:
+                imgs = imgs[0: 8]
             for img_idx, img in enumerate(imgs):
+
+
                 img = torch.from_numpy(img).to(device)
                 img = img.half() if half else img.float()  # uint8 to fp16/32
                 img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -280,7 +309,7 @@ def detect(opt):
                 t1 = time_synchronized()
                 pred = model(img, augment=opt.augment)[0]
 
-                # Apply NMS
+                # Apply NMS -> 중복된 BBox들을 없애준다
                 pred = non_max_suppression(
                     pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
                 t2 = time_synchronized()
@@ -320,29 +349,42 @@ def detect(opt):
                         outputs = deepsort.update(xywhs, confss, im0)
 
                         # draw boxes for visualization
-                        if len(outputs) > 0:
+                        if len(outputs) > max_output:
+                            if current_index > 2:
+                                max_index = img_idx + current_index - 3
+                            else:
+                                max_index = img_idx
+                            max_output = len(outputs)
                             bbox_xyxy = outputs[:, :4]
                             identities = outputs[:, -1]
-                            draw_boxes(im0, bbox_xyxy, identities)
+                            max_img = draw_boxes(im0, bbox_xyxy, identities)
+
                     else:
                         deepsort.increment_ages()
 
                     # Print time (inference + NMS)
                     print('%sDone. (%.3fs)' % (s, t2 - t1))
+            # print(f'max index : {max_index}')
+            if not max_output:
+                current_index = 0
+            else:
+                current_index = max_index
+            # Stream results
+            if show_vid:
+                imS = cv2.resize(max_img, (960, 540))
+                cv2.imshow(img_type, imS)
 
-                    # Stream results
-                    if show_vid:
-                        imS = cv2.resize(im0, (960, 540))
-                        cv2.imshow(img_type, imS)
+                if save_img:
+                    save_folder = Path('D:/dataset/NonVideo3_tiny_result/YOLOv5 + DeepSORT/result')
+                    # focal_num = dataset.focal_images_path[list_frame_idx][img_idx].split('\\')[-1]
+                    # save_image(save_folder, frame_num, focal_num, imS)
+                    save_image(save_folder, frame_num, None, imS)
 
-                        if save_img:
-                            save_folder = Path('D:/dataset/NonVideo3_tiny_result/unnested')
-                            focal_num = dataset.focal_images_path[list_frame_idx][img_idx].split('\\')[-1]
+                    if cv2.waitKey(1) == ord('q'):  # q to quit
+                        raise StopIteration
 
-                            save_image(save_folder, frame_num, focal_num, imS)
+            print(f'[{int(frame_num)}] total tracking time : {time.time() - frame_start:.2f} sec')
 
-                        if cv2.waitKey(1) == ord('q'):  # q to quit
-                            raise StopIteration
 
     print('Done. (%.3fs)' % (time.time() - t0))
 
