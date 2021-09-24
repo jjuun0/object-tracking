@@ -19,6 +19,9 @@ import copy
 import matplotlib.pyplot as plt
 from FocalDataloader import LoadFocalFolder
 import niqe
+import csv
+import pandas as pd
+from iou_jun import IoU
 
 
 def save_image(save_dir, frame_num, frame):
@@ -58,6 +61,7 @@ def main():
     config = ConfigParser('./config.json')
     exper_name = config['name']
     is_gt_on = config['is_gt_on']
+    write_gt = config['write_gt']
     is_record = config['is_record']
     video_name = config['video_name']
     video_type = config['video_type']
@@ -72,13 +76,21 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("device :", device)
 
-    # # ground truth
-    # if is_gt_on:    # IoU 정확도를 측정할 것인지
-    #     f = open('ground_truth/Non_video4_GT.txt', 'r')  # GT 파일
-
     print("Please type the number of trackers: ")
     tracker_num = int(sys.stdin.readline())
     print()
+
+    # # ground truth
+    if is_gt_on:    # IoU 정확도를 측정할 것인지
+        gt = pd.read_csv('gt.csv')
+
+
+    if write_gt:  # gt를 csv에 작성할것인지
+        gt = open('gt.csv', 'w', newline='')
+        wr = csv.writer(gt)
+        wr.writerow(['x', 'y', 'h', 'w'] * tracker_num)
+
+
 
     # create model
     tracker = []
@@ -102,6 +114,7 @@ def main():
     # tracking
     is_first_frame = True
     frame_num = 0
+    gt_index = 0
 
     current_target = [-1 for _ in range(tracker_num)]
     bbox_color = [[0, 0, 255], [0, 255, 0], [255, 0, 0]]
@@ -139,6 +152,7 @@ def main():
     for frame, focals in LoadFocalFolder(video_name, 'focal', frame_range=(start_frame_num, last_frame_num),
                                          focal_range=(start_focal_num, last_focal_num)):
         frame_num += 1
+
         frame_start = time.time()
         if is_first_frame:
             try:
@@ -165,18 +179,23 @@ def main():
                     low_score[k] = 0
 
                     start = time.time()
+                    # vgg_score = []
 
                     for i, f in enumerate(focals):
                         # image = copy.deepcopy(frame)
-                        print(f'[{i+10} th focal index]')
+                        # print(f'[{i+start_focal_num} th focal index]')
                         img = cv2.imread(f)
                         # output[k] = tracker[k].track(img)
-                        output[k] = tracker[k].track(img, i+10)
+                        output[k] = tracker[k].track(img, frame_num, i+start_focal_num)
+                        # vgg_score.append(output[k]['vgg_corr_sum'])
 
                         if output[k]['best_score'] > max_val[k]:
                             max_output[k] = output[k]
                             max_val[k] = output[k]['best_score']
                             max_index[k] = i
+
+                    # vgg_score = sorted(vgg_score, key=lambda x: x[1])
+                    # print(vgg_score)
 
                     max_center_bbox[k] = (max_output[k]['cx'], max_output[k]['cy'])
                     max_bbox[k] = list(map(int, max_output[k]['bbox']))
@@ -192,7 +211,7 @@ def main():
                     prior_frame_center[k] = (-1, -1)
                     current_target[k] = max_index[k]
 
-                    # first_time[k] = False
+                    first_time[k] = False
                     # print()
                 else:
                     # for k in range(tracker_num):
@@ -223,7 +242,7 @@ def main():
                             focal_index = f[-7:-4]
                             print(f'[{focal_index} th focal index]')
                             img = cv2.imread(f)
-                            output[k] = tracker[k].track(img, i+10)
+                            output[k] = tracker[k].track(img, frame_num, focal_index)
 
                             if output[k]['best_score'] > max_val[k]:
                                 # max_anchor_idx = output[k]['best_idx']
@@ -245,7 +264,7 @@ def main():
                         else:
                             # 5개의 앵커들의 평균 좌표로 트래킹 설정
                             # color = [[0, 0, 255], [0, 255, 0], [255, 0, 0], [100, 100, 0], [0, 100, 100]]
-                            ave_bbox = [0, 0, 0, 0]
+                            ave_bbox = [0, 0, 0, 0]  # average
                             ave_center = [0, 0]
                             for a in range(len(max_output[k]['anchor'])):
                                 cur = max_output[k]['anchor'][a]
@@ -324,6 +343,22 @@ def main():
 
             cv2.imshow(video_name, frame)
 
+            if write_gt:  # gt csv 파일 쓰기
+                a_list = []
+                for k in range(tracker_num):
+                    a_list.extend([max_bbox[k][0], max_bbox[k][1], max_bbox[k][3], max_bbox[k][2]])
+                wr.writerow(a_list)
+
+            if is_gt_on:
+                gt_bboxes = gt.loc[gt_index].values
+                for k in range(tracker_num):
+                    gt_bbox = gt_bboxes[4*k:4*(k+1)]
+                    iou = IoU(gt_bbox, [max_bbox[k][0], max_bbox[k][1], max_bbox[k][3], max_bbox[k][2]])
+                    print(iou, end=' ')
+                print()
+                gt_index += 1
+
+
         if is_record:
             save_image(save_path, frame_num, frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -335,7 +370,8 @@ def main():
             print()
 
     print(f'total tracking time : {time.time() - total_start:.2f} sec')
-
+    if write_gt:
+        gt.close()
 
 if __name__ == "__main__":
     main()
