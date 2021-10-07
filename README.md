@@ -141,6 +141,12 @@
   - 2. gt 를 읽어오는것을 pandas 를 이용함
   - 3. gt 와 실제 tracker 의 bbox 를 이용하여 IoU 를 측정한다. 
 
-# 2021.10.08
-- 새로운 영상 받아옴.
-  - 하지만 잘 트래킹이 안되는 상황
+# 2021.10.08  
+- 새로운 영상 받아옴  
+  - 하지만 잘 트래킹이 안되는 상황 
+  - 예시 1   
+    ![1007_180305](https://user-images.githubusercontent.com/66052461/136368044-8a866977-ce0e-4f40-9096-e34c71257c17.gif)  
+  - 예시 2  
+    ![1004_212707](https://user-images.githubusercontent.com/66052461/136368484-96dc24c4-da13-4637-b53e-8ef286b6ac62.gif)  
+
+
