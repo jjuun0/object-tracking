@@ -149,4 +149,38 @@
   - 예시 2  
     ![1004_212707](https://user-images.githubusercontent.com/66052461/136368484-96dc24c4-da13-4637-b53e-8ef286b6ac62.gif)  
 
+# 2021.10.22  
+- 평가 지표: IoU, Distance(gt와 tracking 결과의 BBox 좌상단 좌표와의 유클리디안 거리를 나타냄)  
+- xywh 좌표를 매 프레임마다 검출하여 csv 로 저장하고 gt 와 비교를 통해 IoU, Distance 값도 csv 로 저장하여 그래프를 그려봄  
+- 추가 영상 받음: 강강수월래 영상을 테스트해봤으나 시간도 부족하고, 영상 자체가 어려워 트래킹하기 어렵다  
+  ![ganggang](https://user-images.githubusercontent.com/66052461/142971485-c09d4b6b-b07b-4a70-914f-fb1dbafad2c2.gif)  
+  
+# 2021.11.12
+최종 그래프 산출 및 영상 산출  
+
+## graph
+- IoU  
+  ![image](https://user-images.githubusercontent.com/66052461/142964829-a80ea36f-058b-401c-9add-c256d9c0803f.png)  
+
+- Distance  
+  ![image](https://user-images.githubusercontent.com/66052461/142964890-84363afe-b4ce-4900-ae36-7d6bb464a72e.png)  
+
+- Time (알고리즘별 시간 측정)  
+  ![image](https://user-images.githubusercontent.com/66052461/142964945-aa54a671-bf6e-4835-af0e-c0e6101a985b.png)  
+
+## GIF  
+- 2D  
+  ![2d](https://user-images.githubusercontent.com/66052461/142970090-4cf8e9f2-b18c-47ba-9933-7d365ff83f73.gif)  
+
+- Naïve: 한 프레임에 모든 객체가 트래킹  
+  ![naive](https://user-images.githubusercontent.com/66052461/142971096-e2b8e1ec-e9db-4896-88f6-afd2c03bf63e.gif)  
+
+- 1 obj per frame: 한 프레임에 하나의 객체만 트래킹  
+  ![1frame1obj](https://user-images.githubusercontent.com/66052461/142971220-d46be84d-010c-4d86-9123-3d49e25886f8.gif)  
+
+- Motion Adaptive: 속도 기반으로 하여 객체의 속도가 빨라지는 경우만 트래킹  
+  ![result](https://user-images.githubusercontent.com/66052461/142965765-a2e2a0cf-d3cf-4a73-9d7f-b22701bc9607.gif)  
+
+
+
 
