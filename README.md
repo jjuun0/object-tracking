@@ -1,8 +1,8 @@
 # object-tracking  
 
-주제: 플렌옵틱(다초점 영상) 영상에서 객체(2개 이상) 추적  
-목적: [DeFocus] 내가 원하는 초점이 잘 잡히지 않았을때, 그때의 시점에서 다른 새로운 초점으로 이동하기 위한 목적 프로젝트 
-사용: 영화나 드라마에서 주인공의 포커스를 맞춘다거나, 주인공 뒤에 있는 어떤 객체를 포커스하고 싶을 때 사용한다.
+- 주제: 플렌옵틱(다초점 영상) 영상에서 객체(2개 이상) 추적  
+- 목적: [DeFocus] 내가 원하는 초점이 잘 잡히지 않았을때, 그때의 시점에서 다른 새로운 초점으로 이동하기 위한 목적 프로젝트 
+- 사용: 영화나 드라마에서 주인공의 포커스를 맞춘다거나, 주인공 뒤에 있는 어떤 객체를 포커스하고 싶을 때 사용한다.
 
 # 2021.04.13  
 - 모든 focal 폴더의 사진들을 한장씩 객체 추적.    
@@ -36,7 +36,8 @@
 
 
 # 2021.05.24  
-- siam RPN ++ 에서 아이디어 추가  
+## [속도기반 알고리즘] https://github.com/jjuun0/object-tracking/issues/1
+- siam RPN ++ 에서 아이디어 추가
   - 프레임 하나가 지날수록 물체의 속도를 판단한다. (유클리드 거리를 이용)  
   - 속도가 느려지면 그 객체를 탐지하는 트래커는 프레임 하나를 건너뛰고, 속도가 빨라지면 계속 트래킹한다  
 - 다른 아이디어  
@@ -62,8 +63,6 @@
 
 # 2021.07.13  
 - demo_focal.py  
-- pytorch 프레임워크로 Custom Dataset 을 구축후에 Dataloader 를 통하여 모델을 학습하고 평가함  
-- tensorboard 를 통해 모델, 학습하는데 train loss, acc 와 val loss, acc 도 시각화 하여 사진으로도 저장  
 - sot 모델로 mot 개발중임 : 사용자가 selectroi 로 객체를 선택하고 트래킹하는 방식  
   - 에러 : 객체가 서로 가까우면 BBox 가 업데이트 되면서 물체가 같아져버림  
 
@@ -111,12 +110,22 @@
   - 만약 max index 가 없다면 전체 영역을 다시 트래킹함.   
 
 # 2021.08.09  
+## [선명도] https://github.com/jjuun0/object-tracking/issues/3
 - 선명도 모듈 반영하여 포컬 플레인 영역 범위 조절.  
+  - 데이터 셋으로 반영시에 성능이 괜찮아보여 채택
 
 # 2021.08.16  
-- 객체의 이동방향을 예측하는 알고리즘 추가  
+## [이동방향 예측] https://github.com/jjuun0/object-tracking/issues/5
+- 객체의 이동방향을 예측하는 알고리즘 추가 
+  - 하지만 매번 tracker 가 예측한 BBox 좌표가 매우 미세한 예민한 값을 가짐으로 이 알고리즘 적용 불가능 판단 
+
+## [Anchor 의 평균좌표로 tracker 이동] https://github.com/jjuun0/object-tracking/issues/6
+- 해결: tracker의 anker box 가 5개가 나오게 되는데 이를 평균값으로 tracker 가 예측을 하게끔 한다.
+- BBox 가 갑자기 값이 튀는것을 방지하고, tracker 의 BBox 예측값을 한번 의심해보는 방향.
 
 # 2021.08.23  
+## [SA-Siam에서의 semantic feature 적용] https://github.com/jjuun0/object-tracking/issues/4
+새로운 방식 추가: img classfication task 의 모델 VGG 를 가져와서 correlation 연산을 통해 유사한 focal index 를 찾는 방식 제안  
 - VGG 의 pretrained weight 를 불러와 사용한다.  
   - Feature 부분만 떼어내어 target 이미지와 search reagion 영역의 이미지를 이 VGG 네트워크에 인풋으로 넣은후 둘을 DepthwiseXCorr 연산을 통해 어떤 값이 나오는지 확인해봄.  
   - Feature 분석을 어떻게 해야할지 모르겠다.  
@@ -133,6 +142,20 @@
 - 새로운 비디오 3개를 받았다. 어떤 비디오를 사용할지, 어느 구간을 트래킹하는데 사용할지를 정하자.    
 
 - VGG feature 분석: 현재 5 x 5 에서 높게 찍히는 위치가 다르므로 해당 인덱스의 위치를 활용하여 focal index 를 측정해보자.
+- 결과: focal index 와 gt index 차이가 많이 나서 사용 불가능 판단.  
+
+# 2021.09.17  
+- SOLO: Segmenting Objects by Locations 의 Segment model 을 돌려봤다.
+- 모델 DECOUPLED_SOLO_R50_3x pretraine  
+  ![image](https://user-images.githubusercontent.com/66052461/142971924-3ebac53d-a843-4e8f-af41-12a60bc20a62.png)  
+  
+- Focal 데이터에 적용: focal 데이터이다 보니 segment된 객체의 개수가 적고, 꽃병을 찾지못함.     
+  ![image](https://user-images.githubusercontent.com/66052461/142972025-74810b9f-e224-4444-a18f-be3c93cb2c89.png)  
+  
+- 2D image 데이터에 적용: image 데이터는 focal 데이터보다는 객체를 많이 탐지함.  
+  ![image](https://user-images.githubusercontent.com/66052461/142972106-a62c9699-847a-4bd9-b2af-e8db95f70c3a.png)  
+
+
 
 # 2021.09.24
 - ground truth 만들고 IoU 측정
@@ -148,6 +171,9 @@
     ![1007_180305](https://user-images.githubusercontent.com/66052461/136368044-8a866977-ce0e-4f40-9096-e34c71257c17.gif)  
   - 예시 2  
     ![1004_212707](https://user-images.githubusercontent.com/66052461/136368484-96dc24c4-da13-4637-b53e-8ef286b6ac62.gif)  
+
+## [Best score 값에 따른 focal plane 영역 설정] https://github.com/jjuun0/object-tracking/issues/2
+- 해결: (기존) 선명도를 반영한 focal plane 영역 설정 -> Naive 한 전 프레임에서의 주변 -7 ~ +7 범위 탐색  
 
 # 2021.10.22  
 - 평가 지표: IoU, Distance(gt와 tracking 결과의 BBox 좌상단 좌표와의 유클리디안 거리를 나타냄)  
