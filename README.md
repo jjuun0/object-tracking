@@ -19,7 +19,8 @@
   
 자세한 소개는 노션을 참고 [링크](https://fortune-scraper-694.notion.site/Plenoptic-Video-1-11b24059f39243c1ae4ea8ba441f8057)  
 
-
+---
 ### 폴더 소개
-PlenOpticVot_SiamRPN++ : SiamRPN++ 모델로 플렌옵틱에 대한 다수 객체 추적
-YOLOv5 + DeepSORT : Detection + tracking 모델과 비교함.
+- PlenOpticVot_SiamRPN++ : SiamRPN++ 모델로 플렌옵틱에 대한 다수 객체 추적  
+- YOLOv5 + DeepSORT : Detection + tracking 모델과 비교함.   
+- opencv_tracker: opencv에서 제공하는 tracker로 추적한 코드  
