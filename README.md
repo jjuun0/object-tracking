@@ -1,6 +1,7 @@
-# Multiple object-tracking in Plenoptic video
+# Multiple object-tracking in Plenoptic video-1
 
 - 학부 연구생, 2021.03-2021.11
+- 다음 프로젝트 (플렌옵틱 영상의 다수 객체 추적 2 [link](https://github.com/jjuun0/object-tracking-2))
 
 ### 과제 요약
 
