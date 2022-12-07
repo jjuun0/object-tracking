@@ -25,3 +25,5 @@
 - `PlenOpticVot_SiamRPN++/` : SiamRPN++ 모델로 플렌옵틱에 대한 다수 객체 추적  
 - `YOLOv5 + DeepSORT/` : Detection + tracking 모델과 비교함.   
 - `opencv_tracker/`: opencv에서 제공하는 tracker로 추적한 코드  
+- `ppt/`: 개발한 것들 정리 
+- `sample_data/`: 샘플 플렌옵틱 데이터
